@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
-from titles.models import Comment, Review, User, SCORES
+from reviews.models import Comment, Review, User, SCORES
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 
-from titles.models import Review, Title
+from reviews.models import Review, Title
 from .serializers import (CommentSerializer, ReviewSerializer)
 
 
