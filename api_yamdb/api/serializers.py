@@ -1,27 +1,22 @@
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 
-from reviews.models import Comment, Review, User, SCORES
+from reviews.models import User
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-
+class AuthSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Comment
-        fields = ('id', 'author', 'review', 'text', 'created')
-        read_only_fields = ('id', 'created', 'review', 'author')
+        model = User
+        fields = ('email', 'username')
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-    score = serializers.ChoiceField(choices=SCORES)
-
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Review
-        fields = ('id', 'author', 'score', 'title', 'text', 'created')
-        read_only_fields = ('id', 'created', 'title', 'author')
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+
+
+class GetTokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=256)
+    confirmation_code = serializers.CharField(max_length=512)

@@ -1,48 +1,56 @@
-from turtle import title
-from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, viewsets
-from rest_framework.pagination import LimitOffsetPagination
+import uuid
 
-from reviews.models import Review, Title
-from .serializers import (CommentSerializer, ReviewSerializer)
+from django.core.mail import send_mail
+from rest_framework import status, viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from reviews.models import User
+from .serializers import AuthSerializer, GetTokenSerializer, UserSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-    ]
-    serializer_class = ReviewSerializer
+class SignUpView(APIView):
 
-    def get_title(self):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, pk=title_id)
-        return title
+    def post(self, request):
+        serializer = AuthSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            user = User.objects.get(username=serializer.data.get('username'))
+            email = serializer.data.get('email')
+            confirmation_code = uuid.uuid4()
+            user.confirmation_code = f'{confirmation_code}'
+            user.save()
 
-    def perform_create(self, serializer):
-        title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+            send_mail(
+                'Your confirmation_code',
+                f'Ваш confirmation_code: {confirmation_code}',
+                'manager@yamdb.com',
+                [f'{email}'],
+                fail_silently=False,
+            )
 
-    def get_queryset(self):
-        title = self.get_title()
-        reviews_queryset = title.reviews.all()
-        return reviews_queryset
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CommentViewSet(viewsets.ModelViewSet):
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-    ]
-    serializer_class = CommentSerializer
 
-    def get_review(self):
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, pk=review_id)
-        return review
+class GetTokenView(APIView):
 
-    def perform_create(self, serializer):
-        review = self.get_review()
-        serializer.save(author=self.request.user, review=review)
+    def post(self, request):
+        serializer = GetTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.get(username=serializer.data.get('username'))
+            code = serializer.data.get('confirmation_code')
+            if code != user.confirmation_code:
+                return Response(
+                    serializer.errors, status=status.HTTP_404_NOT_FOUND
+                )
+            refresh = RefreshToken.for_user(user)
+            access = {'access': str(refresh.access_token)}
+            return Response(access, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_queryset(self):
-        review = self.get_review()
-        comments_queryset = review.comments.all()
-        return comments_queryset
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
