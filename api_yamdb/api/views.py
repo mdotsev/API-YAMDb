@@ -104,10 +104,20 @@ class GetTokenView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
+    # Разрешения
+    # permission_classes = (permissions.IsAuthenticated,)
+
     # бэкенд для поиска
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    lookup_field = 'username'
+    pagination_class = PageNumberPagination
+
+    @action(detail=False)
+    def me(self, request):
+        users = User.objects.filter(username=request.user)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
