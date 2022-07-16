@@ -12,6 +12,20 @@ ROLE_CHOISES = (
 )
 
 
+SCORES = (
+    (1, "One"),
+    (2, "Two"),
+    (3, "Three"),
+    (4, "Four"),
+    (5, "Five"),
+    (6, "Six"),
+    (7, "Seven"),
+    (8, "Eight"),
+    (9, "Nine"),
+    (10, "Ten"),
+)
+
+
 class User(AbstractUser):
     email = models.EmailField(
         'Email адрес',
@@ -69,7 +83,9 @@ class Title(models.Model):
         null=True,
         default=None
     )
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null = True)
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True
+    )
     genre = models.ManyToManyField(Genre, through='GenreTitle')
 
     def __str__(self):
@@ -82,3 +98,38 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{self.title}, жанр - {self.genre}'
+
+
+class Review(models.Model):
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews'
+    )
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews'
+    )
+    score = models.IntegerField(choices=SCORES)
+    created = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='author_title'
+            ),
+        ]
+
+
+class Comment(models.Model):
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
+    text = models.TextField()
+    created = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
