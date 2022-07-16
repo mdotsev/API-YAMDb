@@ -40,7 +40,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'api_yamdb.urls'
 
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -116,7 +116,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 3,
     # Ограничения доступа
     'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAdminUser',
     ],
     # JWT-аутентификация
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -131,5 +131,7 @@ SIMPLE_JWT = {
 }
 
 # Эмуляция почтового сервера
-#  подключаем движок console.EmailBackend (отправляем в консоль)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#  подключаем движок filebased.EmailBackend (сохраняем в файл)
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# указываем директорию, в которую будут складываться файлы писем
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
