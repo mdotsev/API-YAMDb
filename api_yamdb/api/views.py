@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 # from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.pagination import (PageNumberPagination)
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,7 +18,7 @@ from .permissions import IsAdminOrReadOnly
 from .serializers import (
     AuthSerializer, CategorySerializer, CommentSerializer,
     GenreSerializer, GetTokenSerializer, ReadOnlyTitleSerializer,
-    ReviewSerializer, TitleSerializer, UserSerializer
+    ReviewSerializer, TitleSerializer, UserSerializer,
 )
 
 
@@ -55,6 +55,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class SignUpView(APIView):
 
+    # Разрешения
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         serializer = AuthSerializer(data=request.data)
         if serializer.is_valid():
@@ -63,7 +66,6 @@ class SignUpView(APIView):
             email = serializer.data.get('email')
             confirmation_code = uuid.uuid4()
             user.confirmation_code = make_password(confirmation_code)
-            print(user.confirmation_code)
             user.save()
 
             send_mail(
@@ -79,6 +81,9 @@ class SignUpView(APIView):
 
 
 class GetTokenView(APIView):
+
+    # Разрешения
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
@@ -99,7 +104,20 @@ class GetTokenView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    # Разрешения
+    # permission_classes = (permissions.IsAuthenticated,)
+
+    # бэкенд для поиска
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
     pagination_class = PageNumberPagination
+
+    @action(detail=False)
+    def me(self, request):
+        users = User.objects.filter(username=request.user)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
