@@ -61,6 +61,14 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class UserMyselfSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio',
+        )
+
+
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=256)
     confirmation_code = serializers.CharField(max_length=512)

@@ -6,9 +6,9 @@ from django.db import models
 
 # Список ролей пользователя
 ROLE_CHOISES = (
-    ('USER', 'User'),
-    ('MODERATOR', 'Moderator'),
-    ('ADMIN', 'Admin'),
+    ('user', 'User'),
+    ('moderator', 'Moderator'),
+    ('admin', 'Admin'),
 )
 
 
@@ -40,7 +40,7 @@ class User(AbstractUser):
         'Роль',
         max_length=20,
         choices=ROLE_CHOISES,
-        default='USER',
+        default='user',
     )
     confirmation_code = models.TextField(
         'Код подтверждения',
