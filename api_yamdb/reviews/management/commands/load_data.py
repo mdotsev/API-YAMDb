@@ -2,7 +2,7 @@ from csv import DictReader
 from django.core.management import BaseCommand
 
 # Import the model
-from reviews.models import Category, Genre, Review, Title, GenreTitle, Comment
+from reviews.models import Review, Title, GenreTitle, Comment
 
 MODELS = (
     Review,
@@ -32,12 +32,6 @@ class Command(BaseCommand):
         print("Data successfuly loading")
 
         # Code to load the data into database
-
-#        for row in DictReader(open('./static/data/genre_title.csv')):
- #           genre_title = GenreTitle(
-  #              id=row['id'], title=row['title_id'], genre=row['genre_id'],
-   #         )
-    #        genre_title.save()
 
         for row in DictReader(open('./static/data/titles.csv')):
             titles = Title(
