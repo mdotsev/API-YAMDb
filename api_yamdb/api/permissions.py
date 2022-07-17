@@ -16,3 +16,12 @@ class IsAdminOrReadOnly(permissions.BasePermission):
                     and (request.user.is_staff or request.user.is_superuser)
                     )
                 )
+
+
+class IsAdminOrMe(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_staff
+            or (request.user.is_authenticated and request.user.role == 'admin')
+            or (view.name == 'Me' and request.user.is_authenticated)
+        )
