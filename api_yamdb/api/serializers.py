@@ -97,9 +97,22 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
+    title = serializers.PrimaryKeyRelatedField(read_only=True)
+
     score = serializers.ChoiceField(choices=SCORES)
 
     class Meta:
         model = Review
         fields = ('id', 'author', 'score', 'title', 'text', 'pub_date')
-        read_only_fields = ('id', 'pub_date', 'title', 'author')
+
+    def validate(self, data):
+        request = self.context.get('request')
+        queryset = self.context.get('view').get_queryset()
+        if (
+            queryset.filter(author=request.user).exists()
+            and request.method != 'PATCH'
+        ):
+            raise serializers.ValidationError(
+                'Вы уже писали рецензию на этот контент!'
+            )
+        return data
