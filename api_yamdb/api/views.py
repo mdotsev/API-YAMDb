@@ -63,7 +63,7 @@ class SignUpView(APIView):
         if serializer.is_valid():
             serializer.save()
             user = User.objects.get(username=serializer.data.get('username'))
-            email = serializer.data.get('email')
+            email = user.email
             confirmation_code = uuid.uuid4()
             user.confirmation_code = make_password(confirmation_code)
             user.save()
@@ -88,12 +88,15 @@ class GetTokenView(APIView):
     def post(self, request):
         serializer = GetTokenSerializer(data=request.data)
         if serializer.is_valid():
-            user = User.objects.get(username=serializer.data.get('username'))
+            user = get_object_or_404(
+                User,
+                username=serializer.data.get('username')
+            )
             code = serializer.data.get('confirmation_code')
             if not check_password(code, user.confirmation_code):
                 return Response(
-                    'Пользователь с таким именем и кодом не найден',
-                    status=status.HTTP_404_NOT_FOUND,
+                    'Код не верный!',
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             refresh = RefreshToken.for_user(user)
             access = {'access': str(refresh.access_token)}

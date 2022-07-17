@@ -52,6 +52,13 @@ class AuthSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'username')
 
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя не должно быть - me!'
+            )
+        return value
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,8 +72,9 @@ class UserMyselfSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio',
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+        read_only_fields = ('role',)
 
 
 class GetTokenSerializer(serializers.Serializer):
