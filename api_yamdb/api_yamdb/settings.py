@@ -113,7 +113,7 @@ AUTH_USER_MODEL = 'reviews.User'
 REST_FRAMEWORK = {
     # Пагинация
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 3,
+    'PAGE_SIZE': 4,
     # Ограничения доступа
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAdminUser',

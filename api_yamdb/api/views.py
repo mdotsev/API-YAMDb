@@ -14,11 +14,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from .mixins import ListCreateDestroyViewSet
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrMe, IsAdminOrReadOnly
 from .serializers import (
     AuthSerializer, CategorySerializer, CommentSerializer,
     GenreSerializer, GetTokenSerializer, ReadOnlyTitleSerializer,
-    ReviewSerializer, TitleSerializer, UserSerializer,
+    ReviewSerializer, TitleSerializer, UserMyselfSerializer, UserSerializer,
 )
 
 
@@ -105,7 +105,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     # Разрешения
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAdminOrMe,)
 
     # бэкенд для поиска
     filter_backends = (filters.SearchFilter,)
@@ -113,10 +113,19 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     pagination_class = PageNumberPagination
 
-    @action(detail=False)
+    @action(methods=['get', 'patch'], detail=False)
     def me(self, request):
-        users = User.objects.filter(username=request.user)
-        serializer = self.get_serializer(users, many=True)
+        if request.method == 'PATCH':
+            partial = True
+            instance = self.request.user
+            serializer = UserMyselfSerializer(
+                instance, data=request.data, partial=partial
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        user = User.objects.get(username=request.user)
+        serializer = self.get_serializer(user, many=False)
         return Response(serializer.data)
 
 
