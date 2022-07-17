@@ -6,7 +6,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,13 +14,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from .mixins import ListCreateDestroyViewSet
-from .permissions import IsAdminOrMe, IsAdminOrReadOnly
+from .permissions import IsAdminOrMe, IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
     AuthSerializer, CategorySerializer, CommentSerializer,
     GenreSerializer, GetTokenSerializer, ReadOnlyTitleSerializer,
     ReviewSerializer, TitleSerializer, UserMyselfSerializer, UserSerializer,
 )
 from .filters import TitlesFilter
+
 
 class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
@@ -136,6 +137,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
+        IsAuthorOrReadOnly,
     ]
     serializer_class = ReviewSerializer
 
@@ -157,6 +159,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
+        IsAuthorOrReadOnly,
     ]
     serializer_class = CommentSerializer
 

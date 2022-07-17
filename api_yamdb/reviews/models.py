@@ -109,9 +109,12 @@ class Review(models.Model):
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
     score = models.IntegerField(choices=SCORES)
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
+
+    def __str__(self):
+        return self.text
 
     class Meta:
         constraints = [
@@ -130,6 +133,6 @@ class Comment(models.Model):
         Review, on_delete=models.CASCADE, related_name='comments'
     )
     text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
