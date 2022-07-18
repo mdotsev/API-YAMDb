@@ -4,9 +4,9 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-# from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,12 +14,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from .mixins import ListCreateDestroyViewSet
-from .permissions import IsAdminOrMe, IsAdminOrReadOnly
+from .permissions import IsAdminOrMe, IsAdminOrReadOnly, IsAuthorOrReadOnly
 from .serializers import (
     AuthSerializer, CategorySerializer, CommentSerializer,
     GenreSerializer, GetTokenSerializer, ReadOnlyTitleSerializer,
     ReviewSerializer, TitleSerializer, UserMyselfSerializer, UserSerializer,
 )
+from .filters import TitlesFilter
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -45,7 +46,8 @@ class TitleViewSet(viewsets.ModelViewSet):
         Avg('reviews__score')
     ).order_by('name')
     permission_classes = (IsAdminOrReadOnly,)
-    # filter_backends = [DjangoFilterBackend,]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitlesFilter
 
     def get_serializer_class(self):
         if self.action in ('retrieve', 'list'):
@@ -65,7 +67,6 @@ def send_email(confirmation_code, email):
 
 class SignUpView(APIView):
 
-    # Разрешения
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -93,7 +94,6 @@ class SignUpView(APIView):
 
 class GetTokenView(APIView):
 
-    # Разрешения
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -118,10 +118,8 @@ class GetTokenView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # Разрешения
     permission_classes = (IsAdminOrMe,)
 
-    # бэкенд для поиска
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
@@ -144,9 +142,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    permission_classes = [
+    permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
-    ]
+        IsAuthorOrReadOnly,
+    )
     serializer_class = ReviewSerializer
 
     def get_title(self):
@@ -165,9 +164,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    permission_classes = [
+    permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
-    ]
+        IsAuthorOrReadOnly,
+    )
     serializer_class = CommentSerializer
 
     def get_review(self):

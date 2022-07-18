@@ -1,28 +1,13 @@
 import datetime
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-# Список ролей пользователя
 ROLE_CHOISES = (
     ('user', 'User'),
     ('moderator', 'Moderator'),
     ('admin', 'Admin'),
-)
-
-
-SCORES = (
-    (1, "One"),
-    (2, "Two"),
-    (3, "Three"),
-    (4, "Four"),
-    (5, "Five"),
-    (6, "Six"),
-    (7, "Seven"),
-    (8, "Eight"),
-    (9, "Nine"),
-    (10, "Ten"),
 )
 
 
@@ -69,7 +54,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=256)
-    year = models.PositiveIntegerField(
+    year = models.PositiveSmallIntegerField(
         verbose_name='Дата выхода',
         validators=[MaxValueValidator(datetime.date.today().year)]
     )
@@ -108,8 +93,13 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
-    score = models.IntegerField(choices=SCORES)
-    created = models.DateTimeField(
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
+    pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
 
@@ -121,6 +111,9 @@ class Review(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return self.text
+
 
 class Comment(models.Model):
     author = models.ForeignKey(
@@ -130,6 +123,6 @@ class Comment(models.Model):
         Review, on_delete=models.CASCADE, related_name='comments'
     )
     text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
