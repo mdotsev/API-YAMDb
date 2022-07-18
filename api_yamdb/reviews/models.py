@@ -69,7 +69,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=256)
-    year = models.PositiveIntegerField(
+    year = models.PositiveSmallIntegerField(
         verbose_name='Дата выхода',
         validators=[MaxValueValidator(datetime.date.today().year)]
     )
