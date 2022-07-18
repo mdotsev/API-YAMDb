@@ -57,7 +57,6 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class SignUpView(APIView):
 
-    # Разрешения
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -84,7 +83,6 @@ class SignUpView(APIView):
 
 class GetTokenView(APIView):
 
-    # Разрешения
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
@@ -109,10 +107,8 @@ class GetTokenView(APIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # Разрешения
     permission_classes = (IsAdminOrMe,)
 
-    # бэкенд для поиска
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     lookup_field = 'username'
@@ -135,10 +131,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    permission_classes = [
+    permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly,
-    ]
+    )
     serializer_class = ReviewSerializer
 
     def get_title(self):
@@ -157,10 +153,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    permission_classes = [
+    permission_classes = (
         permissions.IsAuthenticatedOrReadOnly,
         IsAuthorOrReadOnly,
-    ]
+    )
     serializer_class = CommentSerializer
 
     def get_review(self):

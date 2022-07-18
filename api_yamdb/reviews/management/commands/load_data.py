@@ -1,7 +1,6 @@
 from csv import DictReader
 from django.core.management import BaseCommand
 
-# Import the model
 from reviews.models import Review, Title, GenreTitle, Comment
 
 MODELS = (
@@ -17,7 +16,6 @@ database with tables"""
 
 
 class Command(BaseCommand):
-    # Show this when the user types help
     help = "Loads data from .csv"
 
     def handle(self, *args, **options):
@@ -28,10 +26,7 @@ class Command(BaseCommand):
                 print(ALREDY_LOADED_ERROR_MESSAGE)
                 return
 
-        # Show this before loading the data into the database
         print("Data successfuly loading")
-
-        # Code to load the data into database
 
         for row in DictReader(open('./static/data/titles.csv')):
             titles = Title(

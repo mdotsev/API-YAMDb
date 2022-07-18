@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from reviews.models import (
-    SCORES, Category, Comment, Genre, Review, Title, User
+    Category, Comment, Genre, Review, Title, User
 )
 
 
@@ -98,8 +98,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='username'
     )
     title = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    score = serializers.ChoiceField(choices=SCORES)
 
     class Meta:
         model = Review
