@@ -53,6 +53,16 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
+def send_email(confirmation_code, email):
+    send_mail(
+        'Your confirmation_code',
+        f'Ваш confirmation_code: {confirmation_code}',
+        'manager@yamdb.com',
+        [f'{email}'],
+        fail_silently=False,
+    )
+
+
 class SignUpView(APIView):
 
     # Разрешения
@@ -60,22 +70,23 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = AuthSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            user = User.objects.get(username=serializer.data.get('username'))
+        if serializer.is_valid() or User.objects.filter(
+            username=request.data.get('username'),
+            email=request.data.get('email')
+        ).exists():
+            # serializer.save()
+            # user = User.objects.get(username=serializer.data.get('username'))
+
+            user, created = User.objects.get_or_create(
+                username=request.data.get('username'),
+                email=request.data.get('email')
+            )
+
             email = user.email
             confirmation_code = uuid.uuid4()
             user.confirmation_code = make_password(confirmation_code)
             user.save()
-
-            send_mail(
-                'Your confirmation_code',
-                f'Ваш confirmation_code: {confirmation_code}',
-                'manager@yamdb.com',
-                [f'{email}'],
-                fail_silently=False,
-            )
-
+            send_email(confirmation_code, email)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
