@@ -55,39 +55,33 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-def send_email(confirmation_code, email):
-    send_mail(
-        'Your confirmation_code',
-        f'Ваш confirmation_code: {confirmation_code}',
-        'manager@yamdb.com',
-        [f'{email}'],
-        fail_silently=False,
-    )
-
-
 class SignUpView(APIView):
 
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = AuthSerializer(data=request.data)
-        if serializer.is_valid() or User.objects.filter(
+
+        user_in_db = User.objects.filter(
             username=request.data.get('username'),
             email=request.data.get('email')
-        ).exists():
-            # serializer.save()
-            # user = User.objects.get(username=serializer.data.get('username'))
+        ).exists()
 
+        if serializer.is_valid() or user_in_db:
             user, created = User.objects.get_or_create(
-                username=request.data.get('username'),
-                email=request.data.get('email')
+                username=serializer.data.get('username'),
+                email=serializer.data.get('email')
             )
-
-            email = user.email
             confirmation_code = uuid.uuid4()
             user.confirmation_code = make_password(confirmation_code)
             user.save()
-            send_email(confirmation_code, email)
+            send_mail(
+                'Your confirmation_code',
+                f'Ваш confirmation_code: {confirmation_code}',
+                from_email=None,
+                recipient_list=(user.email,),
+                fail_silently=False,
+            )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -129,15 +123,13 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         if request.method == 'PATCH':
             partial = True
-            instance = self.request.user
             serializer = UserMyselfSerializer(
-                instance, data=request.data, partial=partial
+                request.user, data=request.data, partial=partial
             )
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-        user = User.objects.get(username=request.user)
-        serializer = self.get_serializer(user, many=False)
+        serializer = self.get_serializer(request.user, many=False)
         return Response(serializer.data)
 
 
