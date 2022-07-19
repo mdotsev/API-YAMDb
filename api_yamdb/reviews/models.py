@@ -1,32 +1,18 @@
 import datetime
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-# Список ролей пользователя
-ROLE_CHOISES = (
-    ('user', 'User'),
-    ('moderator', 'Moderator'),
-    ('admin', 'Admin'),
-)
-
-
-SCORES = (
-    (1, "One"),
-    (2, "Two"),
-    (3, "Three"),
-    (4, "Four"),
-    (5, "Five"),
-    (6, "Six"),
-    (7, "Seven"),
-    (8, "Eight"),
-    (9, "Nine"),
-    (10, "Ten"),
-)
 
 
 class User(AbstractUser):
+
+    ROLE_CHOISES = (
+        ('user', 'User'),
+        ('moderator', 'Moderator'),
+        ('admin', 'Admin'),
+    )
+
     email = models.EmailField(
         'Email адрес',
         unique=True,
@@ -50,6 +36,14 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_moderator(self):
+        return self.role == 'moderator'
+
 
 class Category(models.Model):
     name = models.CharField('Название', max_length=256)
@@ -69,7 +63,7 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=256)
-    year = models.PositiveIntegerField(
+    year = models.PositiveSmallIntegerField(
         verbose_name='Дата выхода',
         validators=[MaxValueValidator(datetime.date.today().year)]
     )
@@ -108,13 +102,15 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
-    score = models.IntegerField(choices=SCORES)
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10),
+        ]
+    )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True
     )
-
-    def __str__(self):
-        return self.text
 
     class Meta:
         constraints = [
@@ -123,6 +119,9 @@ class Review(models.Model):
                 name='author_title'
             ),
         ]
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
